@@ -7,6 +7,8 @@ ActorSystem::ActorSystem(){
 ActorSystem::ActorSystem(unsigned int width, Actor* actor_array) {
 	//Make an actor system with width defined
 	m_width = width;
+	m_height = 1;
+	m_depth = 1;
 	//Need to instantiate this on the GPU
 	m_actor_array = actor_array;
 }

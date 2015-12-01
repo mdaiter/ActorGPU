@@ -17,15 +17,15 @@ class ActorSystem{
 		ActorSystem(unsigned int, unsigned int, unsigned int);
 		~ActorSystem();
 
-		void simualte;
+		void simualte();
 	protected:
 		__global__ void actorRun(unsigned int);
 	private:
 		Actor* m_actor_array;
 		//Make these the three default dimensions. We can specify more, but for now, just do three
-		unsigned int m_width { 0 };
-		unsigned int m_height { 0 };
-		unsigned int m_depth { 0 };
+		unsigned int m_width;
+		unsigned int m_height;
+		unsigned int m_depth;
 };
 
 #endif

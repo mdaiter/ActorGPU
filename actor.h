@@ -6,10 +6,8 @@ class Actor{
 		Actor();
 		Actor(unsigned int);
 		~Actor();
-		virtual void react() = 0;
-
-	private:
-		// We make this -1 to use this as a check that the actor at hand has been initialized
+	protected:
+		__device__ virtual void react() = 0;
 		unsigned int m_id;
 };
 
