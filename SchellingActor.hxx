@@ -1,6 +1,7 @@
 #ifndef SCHELLING_ACTOR_H
 #define SCHELLING_ACTOR_H
 
+#include <cuda.h>
 #include "actor.h"
 
 class SchellingActor : public Actor {
@@ -12,11 +13,11 @@ class SchellingActor : public Actor {
 		__device__ void receive(Actor*, unsigned char);
 		// ! Used to run after the actor receives all of its data. Reacts by sending the MapActor its coordinates and type.
 		__device__ virtual void react();
-		__device__ void increaseNumberAdjacent() { m_numberAdjacent++; }
+		__device__ void increaseNumberAdjacent() { atomicAdd(&m_numberAdjacent, 1); }
 		// Used to increase the number of adjacent actors
 		__device__ unsigned char getType() { return m_type; }
 		// Used to reset the number of adjacent actors
-		__device__ void resetNumberAdjacent() { m_numberAdjacent = 0; }
+		__device__ void resetNumberAdjacent() { atomicCAS(&m_numberAdjacent, 0); }
 
 	private:
 		// This is used for the color of the Schelling Actor

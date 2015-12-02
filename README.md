@@ -8,3 +8,8 @@ Easy:
 
 (Code samples coming soon)
 
+
+## How is this code structured
+###Actors
+You should be able to subclass actors. Actors are an interface within our system, so when subclassing, you MUST implement a "react" method
+
