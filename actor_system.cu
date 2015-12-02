@@ -25,6 +25,7 @@ ActorSystem::~ActorSystem(){
 	cudaFree(m_actor_array);
 }
 
+// ! This is the function that should be run in parallel to send types of actors to all other actors
 __global__ void ActorSystem::actorRun(unsigned int size){
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	if (idx < size)
