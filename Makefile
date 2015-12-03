@@ -1,16 +1,16 @@
 all: compile
 
-compile: main.o actor.o SchellingActor.o 
+compile: main.o actor.o SchellingActor.o
 	/usr/local/cuda/bin/nvcc main.o actor.o SchellingActor.o -o ActorSim
 
 main.o: main.cu
-	/usr/local/cuda/bin/nvcc -c main.cu
+	/usr/local/cuda/bin/nvcc -c -dc main.cu
 
 actor.o: actor.cu
-	/usr/local/cuda/bin/nvcc -c actor.cu
+	/usr/local/cuda/bin/nvcc -c -dc actor.cu
 
-ScellingActor.o: SchellingActor.cu
-	/usr/local/cuda/bin/nvcc -c SchellingActor.cu
+SchellingActor.o: SchellingActor.cu
+	/usr/local/cuda/bin/nvcc -c -dc SchellingActor.cu
 
 clean:
-	rm *o ActorSim
+	rm -rf *o

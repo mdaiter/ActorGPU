@@ -5,32 +5,39 @@
 
 #include <cuda.h>
 #include <stdio.h>
-#include "actor.h"
 #include "SchellingActor.hxx"
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
-__global__ void init(Actor* input){
+#define NUM_ACTORS 10
+#define BLOCK_SIZE 1024
+
+__global__ void init(Actor** actor_array_d, int size) {
 	int idx = threadIdx.x + blockDim.x * blockIdx.x;
-	input[idx] = new SchellingActor();
+	actor_array_d[idx] = new SchellingActor(0);
 	__syncthreads();
 }
 
-__global__ void sim(Actor* input){
-	int idx = threadIdx.x;
-	if (idx < 1){
-		//input[idx].test = 'a';
-		input[idx].react();
+__global__ void sim(Actor** actor_array_d, int size) {
+	int idx = threadIdx.x + blockDim.x * blockIdx.x;
+	if (idx < NUM_ACTORS){
+		actor_array_d[idx]->react();
+		actor_array_d[idx]->send(NULL, 0);
 	}
 	__syncthreads();
 }
 
 int main() {
-	SchellingActor* schelling_actor_d;
-	SchellingActor* schelling_actor_h = new SchellingActor();
-	cudaMalloc((void**)&schelling_actor_d, sizeof(SchellingActor));
-	sim<<<1, 1>>>(schelling_actor_d);
-	cudaMemcpy(schelling_actor_h, schelling_actor_d, sizeof(SchellingActor), cudaMemcpyDeviceToHost);
-	printf("schelling_actor_h: %c\n", schelling_actor_h->type());
-	cudaFree(schelling_actor_d);
+	Actor** actor_array_d;
+	//SchellingActor* schelling_actor_h = new SchellingActor();
+	cudaMalloc((void**)&actor_array_d, NUM_ACTORS * sizeof(Actor*));
+  dim3 DimGrid(ceil((float)NUM_ACTORS/(float)BLOCK_SIZE), 1, 1);
+  dim3 DimBlock(BLOCK_SIZE, 1, 1);
+  init<<<DimGrid, DimBlock>>>(actor_array_d, BLOCK_SIZE);
+  sim<<<DimGrid, DimBlock>>>(actor_array_d, BLOCK_SIZE);
+	//cudaMemcpy(schelling_actor_h, actor_array_d, sizeof(SchellingActor), cudaMemcpyDeviceToHost);
+	//printf("schelling_actor_h: %c\n", schelling_actor_h->type());
+	cudaFree(actor_array_d);
 }
 
 /*
