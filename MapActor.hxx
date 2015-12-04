@@ -9,6 +9,7 @@ class MapActor : public Actor {
 		// !!!!!! TODO: determine whether we swap by pointer or by value between cells
 		__device__ virtual void react();
 		__device__ virtual void send(Actor*, char*);
+		__host__ void moveActorsAround();
 	private:
 		Actor* m_map_h;
 		Actor* m_map_d;

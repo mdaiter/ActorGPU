@@ -11,6 +11,9 @@
 #define LOWER_MID(x) x + width
 #define LOWER_RIGHT(x) + width + 1
 
+#define NUM_THREADS 256
+#define NUM_THRESHOLD 2
+
 __host__ __device__ MapActor::MapActor(unsigned int width, unsigned int height) {
 	m_width = width;
 	m_height = height;
@@ -32,10 +35,6 @@ __global__ void compute_free(SchellingActor* actorsGlobal, unsigned int width, u
 			//Position map index needs to equal 1 if free; 0 if not free. Use this data structure as a representation of a 
 			positionIndexMap[idy * width + idx] = 1;
 	}
-}
-
-SchellingActor* compute_free_synchronous(SchellingActor* actorsGlobal, unsigned int width, unsigned int height) {
-	std::vector<SchellingActor> freeVector = 
 }
 
 __global__ void compute_shifts(SchellingActor* actorsGlobal, unsigned int width, unsigned int height, unsigned int threshold, unsigned int* 
@@ -67,6 +66,29 @@ __global__ void compute_shifts(SchellingActor* actorsGlobal, unsigned int width,
 	if (actorsGlobal[idy * width + idx].numberAdjacent() > threshold)
 		actorsThatNeedShifting[idy * width + idx]++;
 	__syncthreads();
+}
+
+// You MUST pass in a device-vector of the 
+__host__ void MapActor::moveActorsAround() {
+	unsigned int* freePositions_h = (unsigned int*) malloc(sizeof(unsigned int) * m_width * m_height);
+	unsigned int* freePositions_d;
+	unsigned int* actorsThatNeedMoving_h = (unsigned int*) malloc(sizeof(unsigned int) * m_width * m_height);
+	unsigned int* actorsThatNeedMoving_d;
+	cudaMalloc((void**)&freePositions_d, sizeof(unsigned int) * m_width * m_height);
+	cudaMemset(freePosiitons_d, 0, sizeof(unsigned int) * m_width * m_height);
+	cudaMalloc((void**)&actorsThatNeedMoving_d, sizeof(unsigned int) * m_width * m_height);
+	cudaMemset(actorsThatNeedMoving_d, 0, sizeof(unsigned int) * m_width * m_height);
+	dim3 blockDim((m_width - 1) / NUM_THREADS + 1, (m_height - 1) / NUM_THREADS + 1, 1);
+	dim3 threadDim(NUM_THREADS, NUM_THREADS, 0);
+	compute_free<<<blockDim, threadDim>>>(m_map_d, m_width, m_height, freePositions_d);
+	compute_shifts<<<blockDim, threadDim>>>(m_map_d, m_width, m_height, NUM_THRESHOLD, actorsThatNeedMoving_d);
+	
+	//TODO: Compute shifts synchronously
+
+	free(freePositions_h);
+	free(actorsThatNeedMoving_h);
+	cudaFree(actorsThatNeedMoving_d);
+	cudaFree(freePositions_d);
 }
 
 __device__ void MapActor::react() {
