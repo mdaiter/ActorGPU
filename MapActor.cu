@@ -68,6 +68,25 @@ __global__ void compute_shifts(SchellingActor* actorsGlobal, unsigned int width,
 	__syncthreads();
 }
 
+bool zip_actors(unsigned int* freeActors, unsigned int* actorsThatNeedMoving, unsigned int width, unsigned int height) {
+	// Both vectors have been allocated with the width * height
+	unsigned int prev_free = width * height + 1;
+	unsigned int prev_actorThatNeedsMoving = width * height + 1;
+	for (size_t i = 0; i < width * height; i++){
+		if (freeActors[i] == 1){
+			prev_free = i;
+		if (actorsThatNeedsMoving[i] == 1 )
+			prev_actorThatNeedsMoving = i;
+
+		//Now we determine whether we can make a shift
+		if (prev_actorThatNeedsMoving != width * height + 1 && 
+				prev_free != width * height + 1){
+			// Shift
+			
+		}	
+	}
+}
+
 // You MUST pass in a device-vector of the 
 __host__ void MapActor::moveActorsAround() {
 	unsigned int* freePositions_h = (unsigned int*) malloc(sizeof(unsigned int) * m_width * m_height);
@@ -87,12 +106,7 @@ __host__ void MapActor::moveActorsAround() {
 	cudaMemcpy(freePositions_h, freePositions_d, sizeof(unsigned int) * m_width * m_height, cudaMemcpyDeviceToHost);
 	cudaMemcpy(actorsThatNeedMoving_h, actorsThatNeedMoving_d, sizeof(unsigned int) * m_width * m_height, cudaMemcpyDeviceToHost);
 	
-	for (int i = 0; i < m_width * m_height; i++){
-		// If position is open, try to fill it
-		if (freePositions_h[i] > 0) {
-			//TODO: Find way to swap actors
-		}
-	}
+	zip_actors(freePositions_h, actorsThatNeedMoving_h, m_width, m_height);
 
 	free(freePositions_h);
 	free(actorsThatNeedMoving_h);

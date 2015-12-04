@@ -15,8 +15,6 @@ class Actor{
 		__device__ virtual void send(Actor* receiver, char message) = 0;
 	protected:
 		unsigned int m_id;
-		// This should be able to push in and pop off messages
-		MessageBox* message_box;
 };
 
 #endif
