@@ -84,6 +84,15 @@ __host__ void MapActor::moveActorsAround() {
 	compute_shifts<<<blockDim, threadDim>>>(m_map_d, m_width, m_height, NUM_THRESHOLD, actorsThatNeedMoving_d);
 	
 	//TODO: Compute shifts synchronously
+	cudaMemcpy(freePositions_h, freePositions_d, sizeof(unsigned int) * m_width * m_height, cudaMemcpyDeviceToHost);
+	cudaMemcpy(actorsThatNeedMoving_h, actorsThatNeedMoving_d, sizeof(unsigned int) * m_width * m_height, cudaMemcpyDeviceToHost);
+	
+	for (int i = 0; i < m_width * m_height; i++){
+		// If position is open, try to fill it
+		if (freePositions_h[i] > 0) {
+			//TODO: Find way to swap actors
+		}
+	}
 
 	free(freePositions_h);
 	free(actorsThatNeedMoving_h);
