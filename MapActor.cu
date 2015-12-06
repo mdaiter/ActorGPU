@@ -18,10 +18,13 @@ __host__ __device__ MapActor::MapActor(unsigned int width, unsigned int height) 
 	m_width = width;
 	m_height = height;
 	
+
 }
 
 __host__ __device__ MapActor::~MapActor() {
+	for (int i = 0; i < m_width * m_height; i++) {
 	
+	}
 }
 
 __global__ void compute_free(SchellingActor* actorsGlobal, unsigned int width, unsigned int height, unsigned int* positionIndexMap) {
@@ -68,7 +71,35 @@ __global__ void compute_shifts(SchellingActor* actorsGlobal, unsigned int width,
 	__syncthreads();
 }
 
-bool zip_actors(unsigned int* freeActors, unsigned int* actorsThatNeedMoving, unsigned int width, unsigned int height) {
+// TODO: Don't try it.
+/*
+__global__ void parallel_zip_actors(unsigned int* freeActors, unsigned int* actorsThatNeedMoving, unsigned int width, unsigned int height) {
+	extern __shared__ unsigned int freeActorsValues[];
+	extern __shared__ unsigned int actorsThatNeed[];
+	__shared__ int freeActorArrPos;
+	__shared__ int actorsThatNeedArrPos;
+
+	int idx = threadIdx.x + blockIdx.x * blockDim.x;
+	int idy = threadIdx.y + blockIdx.y * blockDim.y;
+
+	if (freeActors[idy * width + idx] == 1){
+		freeActorsValues[freeActorArrPos] = idy * width + idx;
+		freeActorArrPos++;
+	}
+
+	if (actorsThatNeed[idy * width + idx] == 1){
+		actorsThatNeed[actorsThatNeedArrPos] = idy * width + idx;
+		actorsThatNeedArrPos++;
+	}
+
+	__syncthreads();
+
+	min(&freeActorArrPos, actorsThatNeedArrPos);
+
+	
+}
+*/
+bool zip_actors(Actor* totalActor, unsigned int* freeActors, unsigned int* actorsThatNeedMoving, unsigned int width, unsigned int height) {
 	// Both vectors have been allocated with the width * height
 	unsigned int prev_free = width * height + 1;
 	unsigned int prev_actorThatNeedsMoving = width * height + 1;
@@ -82,7 +113,12 @@ bool zip_actors(unsigned int* freeActors, unsigned int* actorsThatNeedMoving, un
 		if (prev_actorThatNeedsMoving != width * height + 1 && 
 				prev_free != width * height + 1){
 			// Shift
-			
+			Actor* actorFreeAddr = &(totalActor[prev_free]);
+			Actor* actorMoveAddr = &(totalActor[prev_actorThatNeedsMoving]);
+			totalActor[prev_free] = totalActor[prev_actorThatNeedsMoving];
+			totalActor[prev_actorThatNeedsMoving] = totalActor[prev_free];
+			prev_free = width * height + 1;
+			prev_actorThatNeedsMoving = width * height + 1;
 		}	
 	}
 }
@@ -101,7 +137,7 @@ __host__ void MapActor::moveActorsAround() {
 	dim3 threadDim(NUM_THREADS, NUM_THREADS, 0);
 	compute_free<<<blockDim, threadDim>>>(m_map_d, m_width, m_height, freePositions_d);
 	compute_shifts<<<blockDim, threadDim>>>(m_map_d, m_width, m_height, NUM_THRESHOLD, actorsThatNeedMoving_d);
-	
+	parallel_zip_actors<<<blockDim, threadDim, 2 * m_width * m_height * sizeof(unsigned int)>>>(freePositions_d, actorsThatNeedMoving_d, m_width, m_height);
 	//TODO: Compute shifts synchronously
 	cudaMemcpy(freePositions_h, freePositions_d, sizeof(unsigned int) * m_width * m_height, cudaMemcpyDeviceToHost);
 	cudaMemcpy(actorsThatNeedMoving_h, actorsThatNeedMoving_d, sizeof(unsigned int) * m_width * m_height, cudaMemcpyDeviceToHost);

@@ -1,6 +1,9 @@
 #ifndef MAP_ACTOR_H
 #define MAP_ACTOR_H
 
+#include "actor.h"
+#include "SchellingActor.h"
+
 class MapActor : public Actor {
 	public:
 		__host__ __device__ MapActor(unsigned int, unsigned int);
@@ -11,8 +14,8 @@ class MapActor : public Actor {
 		__device__ virtual void send(Actor*, char*);
 		__host__ void moveActorsAround();
 	private:
-		Actor* m_map_h;
-		Actor* m_map_d;
+		Actor** m_map_h;
+		Actor** m_map_d;
 		unsigned int m_width;
 		unsigned int m_height;
 };

@@ -14,7 +14,7 @@
 
 __global__ void init(Actor** actor_array_d, int size) {
 	int idx = threadIdx.x + blockDim.x * blockIdx.x;
-	actor_array_d[idx] = new SchellingActor(0);
+	actor_array_d[idx] = new SchellingActor(idx);
 	__syncthreads();
 }
 
@@ -22,20 +22,24 @@ __global__ void sim(Actor** actor_array_d, int size) {
 	int idx = threadIdx.x + blockDim.x * blockIdx.x;
 	if (idx < NUM_ACTORS){
 		actor_array_d[idx]->react();
-		actor_array_d[idx]->send(NULL, 0);
+		actor_array_d[idx]->send(NULL, actor_array_d->type());
 	}
 	__syncthreads();
 }
 
 int main() {
 	Actor** actor_array_d;
+	MapActor* mapActor_h;
+	MapActor* mapActor_d;
+
+	// Instantiate 
 	//SchellingActor* schelling_actor_h = new SchellingActor();
 	cudaMalloc((void**)&actor_array_d, NUM_ACTORS * sizeof(Actor*));
   dim3 DimGrid(ceil((float)NUM_ACTORS/(float)BLOCK_SIZE), 1, 1);
   dim3 DimBlock(BLOCK_SIZE, 1, 1);
   init<<<DimGrid, DimBlock>>>(actor_array_d, BLOCK_SIZE);
   sim<<<DimGrid, DimBlock>>>(actor_array_d, BLOCK_SIZE);
-	//cudaMemcpy(schelling_actor_h, actor_array_d, sizeof(SchellingActor), cudaMemcpyDeviceToHost);
+  //cudaMemcpy(schelling_actor_h, actor_array_d, sizeof(SchellingActor), cudaMemcpyDeviceToHost);
 	//printf("schelling_actor_h: %c\n", schelling_actor_h->type());
 	cudaFree(actor_array_d);
 }

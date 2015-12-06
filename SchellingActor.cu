@@ -20,6 +20,7 @@ __device__ void SchellingActor::react() {
 __device__ void SchellingActor::send(Actor* receiver, char message) {
   printf("SchellingActor send()\n");
   if (message != 'f' && message != static_cast<SchellingActor*>(receiver)->type())
-  	  static_cast<SchellingActor*>(receiver)->increaseNumberAdjacent();
+  	  //static_cast<SchellingActor*>(receiver)->increaseNumberAdjacent();
+  	  this->increaseNumberAdjacent();
 }
 
