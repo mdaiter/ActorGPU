@@ -13,13 +13,13 @@ class SchellingActor : public Actor {
 		__device__ void receive(Actor*, unsigned char);
 		// ! Used to run after the actor receives all of its data. Reacts by sending the MapActor its coordinates and type.
 		__device__ virtual void react();
-    	
+
 		__device__ __host__ unsigned char type() { return m_type; }
 
 		__device__ __host__ unsigned int numberAdjacent() { return m_numberAdjacent; }
 
-    	__device__ virtual void send(Actor* receiver, char message);
-		
+    __device__ virtual void send(Actor* receiver, char message);
+
 		__device__ void increaseNumberAdjacent() { atomicAdd(&m_numberAdjacent, 1); }
 		// Used to increase the number of adjacent actors
 		// Used to reset the number of adjacent actors

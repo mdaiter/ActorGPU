@@ -6,7 +6,7 @@
 #include "actor.h"
 
 Actor::Actor(){
-	m_id = -1;
+	m_id = 0;
 }
 
 Actor::Actor(unsigned int id){
